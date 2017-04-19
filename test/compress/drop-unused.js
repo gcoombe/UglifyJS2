@@ -1110,3 +1110,65 @@ delete_assign_2: {
     }
     expect_stdout: true
 }
+
+drop_var: {
+    options = {
+        toplevel: true,
+        unused: true,
+    }
+    input: {
+        var a;
+        console.log(a, b);
+        var a = 1, b = 2;
+        console.log(a, b);
+        var a = 3;
+        console.log(a, b);
+    }
+    expect: {
+        console.log(a, b);
+        var a = 1, b = 2;
+        console.log(a, b);
+        a = 3;
+        console.log(a, b);
+    }
+    expect_stdout: [
+        "undefined undefined",
+        "1 2",
+        "3 2",
+    ]
+}
+
+issue_1830_1: {
+    options = {
+        unused: true,
+    }
+    input: {
+        !function() {
+            L: for (var b = console.log(1); !1;) continue L;
+        }();
+    }
+    expect: {
+        !function() {
+            L: for (console.log(1); !1;) continue L;
+        }();
+    }
+    expect_stdout: "1"
+}
+
+issue_1830_2: {
+    options = {
+        unused: true,
+    }
+    input: {
+        !function() {
+            L: for (var a = 1, b = console.log(a); --a;) continue L;
+        }();
+    }
+    expect: {
+        !function() {
+            var a = 1;
+            L: for (console.log(a); --a;) continue L;
+        }();
+    }
+    expect_stdout: "1"
+}
